@@ -254,6 +254,26 @@ const TProgmemRGBPalette16 RedWhite_p FL_PROGMEM =
    CRGB::Red,  CRGB::Red,  CRGB::Gray, CRGB::Gray,
    CRGB::Red,  CRGB::Red,  CRGB::Gray, CRGB::Gray };
 
+const TProgmemRGBPalette16 Whites_p FL_PROGMEM =
+{  CRGB::AliceBlue,  CRGB::Cornsilk,  CRGB::Snow, CRGB::White, //bluer
+   CRGB::Grey,  CRGB::FloralWhite,  CRGB::Gainsboro, CRGB::DimGray, //yellow
+   CRGB::DarkGray,  CRGB::Gainsboro,  CRGB::Seashell, CRGB::White,
+   CRGB::LightSlateGray,  CRGB::GhostWhite,  CRGB::Ivory, CRGB::LightGrey };
+
+//{  CRGB::AliceBlue,  CRGB::LightSlateGray,  CRGB::Snow, CRGB::White, //bluer
+//   CRGB::Cornsilk,  CRGB::FloralWhite,  CRGB::Ivory, CRGB::Seashell, //yellow
+//   CRGB::DarkGray,  CRGB::Gainsboro,  CRGB::WhiteSmoke, CRGB::White,
+//   CRGB::DimGray,  CRGB::GhostWhite,  CRGB::Grey, CRGB::LightGrey };
+
+
+// A red and white striped palette
+// "CRGB::Gray" is used as white to keep the brightness more uniform.
+const TProgmemRGBPalette16 RedWhiteGreen_p FL_PROGMEM =
+{  CRGB::Red,  CRGB::Red,  CRGB::Gray, CRGB::Gray,
+   CRGB::Red,  CRGB::Red,  CRGB::Gray, CRGB::Gray,
+   CRGB::Green,  CRGB::Green,  CRGB::Gray, CRGB::Gray,
+   CRGB::Green,  CRGB::Green,  CRGB::Gray, CRGB::Gray };
+
 // A mostly blue palette with white accents.
 // "CRGB::Gray" is used as white to keep the brightness more uniform.
 const TProgmemRGBPalette16 BlueWhite_p FL_PROGMEM =
@@ -320,6 +340,18 @@ void hollyTwinkles()
 void redWhiteTwinkles()
 {
   twinkleFoxPalette = RedWhite_p;
+  drawTwinkles();
+}
+
+void whiteTwinkles()
+{
+  twinkleFoxPalette = Whites_p;
+  drawTwinkles();
+}
+
+void redWhiteGreenTwinkles()
+{
+  twinkleFoxPalette = RedWhiteGreen_p;
   drawTwinkles();
 }
 

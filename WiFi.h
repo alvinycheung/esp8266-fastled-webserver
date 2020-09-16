@@ -10,8 +10,8 @@
 const char WiFiAPPSK[] = "";
 
 // Wi-Fi network to connect to (if not in AP mode)
-char* ssid = "MilkyWay";
-char* password = "2145467756";
+//char* ssid = "MilkyWay";
+//char* password = "2145467756";
 
 #define HOSTNAME "ESP8266-" ///< Hostname. The initializeWiFi function adds the Chip ID at the end.
 

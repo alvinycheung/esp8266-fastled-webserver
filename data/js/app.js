@@ -25,6 +25,12 @@ var ignoreColorChange = false;
 $(document).ready(function () {
   $("#status").html("Connecting, please wait...");
 
+  getWhoami();
+
+  $("#reset").click(function () {
+    postReset();
+  });
+
   $.get(urlBase + "all", function (data) {
       $("#status").html("Loading, please wait...");
 
@@ -536,6 +542,27 @@ function delayPostValue(name, value) {
   postValueTimer = setTimeout(function () {
     postValue(name, value);
   }, 300);
+}
+
+function getWhoami() {
+  var name = "whoami";
+  $.get(urlBase + name, function (data) {
+    $('#myName').html(data.name);
+    $("#status").html("Set myName to " + data.name);
+  }).fail(function (errorThrown) {
+    $("#status").html("Fail: " + errorThrown);
+  });
+}
+
+function postReset() {
+  var name = "reset";
+  $("#status").html("Server Reset");
+  $.post(urlBase + name, {}, function (data) {
+      //do nothing because this is expected to fail
+    })
+    .fail(function (textStatus, errorThrown) {
+      //do nothing because this is expected to fail
+    });
 }
 
 function postColor(name, value) {

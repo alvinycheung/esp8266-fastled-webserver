@@ -4,9 +4,7 @@
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-
+   the Free So
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -52,13 +50,49 @@ ESP8266HTTPUpdateServer httpUpdateServer;
 
 #include "FSBrowser.h"
 
-#define DATA_PIN      D2
-#define LED_TYPE      WS2812B
-#define COLOR_ORDER   GRB
-#define NUM_LEDS      60
-#define HALF_LEDS     NUM_LEDS / 2
+#define MY_NAME    "Thousand Petal Lotus"
+//#define MY_NAME    "Garage Side"
+//#define MY_NAME    "Ground Floor"
+//#define MY_NAME    "1st Floor Roof"
+//#define MY_NAME    "Wreath"
+//#define MY_NAME    "Bed"
+//#define MY_NAME    "Fire Circle"
+//#define MY_NAME    "Kitchen"
+//#define MY_NAME    "SmokeBreak"
+//#define MY_NAME    "Safety"
+//#define MY_NAME    "Phasing"
 
-#define MILLI_AMPS         2000 // IMPORTANT: set the max milli-Amps of your power supply (4A = 4000mA)
+#define DATA_PIN   D2
+#define LED_TYPE   WS2812B //LED Strip
+//#define LED_TYPE   WS2811 //LED String
+
+#define COLOR_ORDER   GRB // LED Strip
+//#define COLOR_ORDER   RGB // LED String
+
+//#define SYSTEM_MAX_LEDS       8 * 50 //house
+#define SYSTEM_MAX_LEDS       144 //Lotus
+//#define SYSTEM_MAX_LEDS       186 //Phasing
+//#define SYSTEM_MAX_LEDS       9 * 50 //fire circle
+//#define SYSTEM_MAX_LEDS       4 * 50 //kitchen, smokebreak
+
+//#define HALF_SYSTEM_MAX_LEDS  SYSTEM_MAX_LEDS / 2
+
+//#define NUM_LEDS            60 // Lotus
+//#define NUM_LEDS            426 // Bed
+//#define NUM_LEDS            6 * 50 // First Floor
+//#define NUM_LEDS              5 * 50 // Ground Floor
+//#define NUM_LEDS            144 - 16// Wreath
+#define NUM_LEDS            SYSTEM_MAX_LEDS //try to sync everything
+
+#define HALF_LEDS             NUM_LEDS / 2
+#define HALF_SYSTEM_MAX_LEDS  HALF_LEDS
+
+#define MILLI_AMPS          4000 // IMPORTANT: set the max milli-Amps of your power supply (4A = 4000mA) // standard usb
+//#define MILLI_AMPS            30000 // 30 Amps
+
+#define VOLTS         5 // IMPORTANT: LED Strip
+//#define VOLTS           12 // IMPORTANT: LED String
+
 #define FRAMES_PER_SECOND  120  // here you can control the speed. With the Access Point / Web Server the animations run a bit slower.
 
 const bool apMode = true;
@@ -70,8 +104,8 @@ const bool apMode = true;
 // const char WiFiAPPSK[] = "your-password";
 
 // Wi-Fi network to connect to (if not in AP mode)
-// char* ssid = "your-ssid";
-// char* password = "your-password";
+// char* ssid = "Laniakea";
+// char* password = "2145467756";
 
 
 CRGB leds[NUM_LEDS];
@@ -87,12 +121,12 @@ uint8_t secondsPerPalette = 10;
 // COOLING: How much does the air cool as it rises?
 // Less cooling = taller flames.  More cooling = shorter flames.
 // Default 50, suggested range 20-100
-uint8_t cooling = 49;
+uint8_t cooling = 50;
 
 // SPARKING: What chance (out of 255) is there that a new spark will be lit?
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
-uint8_t sparking = 60;
+uint8_t sparking = 120;
 
 uint8_t speed = 30;
 
@@ -145,6 +179,7 @@ typedef PatternAndName PatternAndNameList[];
 
 PatternAndNameList patterns = {
   { pride,                  "Pride" },
+//  { prideScaled,            "Pride Scaled" },
   { colorWaves,             "Color Waves" },
 
   // twinkle patterns
@@ -156,8 +191,10 @@ PatternAndNameList patterns = {
   // TwinkleFOX patterns
   { retroC9Twinkles,        "Retro C9 Twinkles" },
   { redWhiteTwinkles,       "Red & White Twinkles" },
+  { redWhiteGreenTwinkles,  "Red, White, & Green Twinkles"},
   { blueWhiteTwinkles,      "Blue & White Twinkles" },
   { redGreenWhiteTwinkles,  "Red, Green & White Twinkles" },
+  { whiteTwinkles,          "White Twinkles" },
   { fairyLightTwinkles,     "Fairy Light Twinkles" },
   { snow2Twinkles,          "Snow 2 Twinkles" },
   { hollyTwinkles,          "Holly Twinkles" },
@@ -168,9 +205,9 @@ PatternAndNameList patterns = {
   { fireTwinkles,           "Fire Twinkles" },
   { cloud2Twinkles,         "Cloud 2 Twinkles" },
   { oceanTwinkles,          "Ocean Twinkles" },
-
-  { rainbow,                "Rainbow" },
-  { rainbowWithGlitter,     "Rainbow With Glitter" },
+//
+//  { rainbow,                "Rainbow" },
+//  { rainbowWithGlitter,     "Rainbow With Glitter" },
   { rainbowSolid,           "Solid Rainbow" },
   { confetti,               "Confetti" },
   { sinelon,                "Sinelon" },
@@ -216,6 +253,8 @@ const String paletteNames[paletteCount] = {
 
 #include "Fields.h"
 
+void(* resetFunc) (void) = 0;
+
 void setup() {
   WiFi.setSleepMode(WIFI_NONE_SLEEP);
 
@@ -228,7 +267,7 @@ void setup() {
   FastLED.setDither(false);
   FastLED.setCorrection(TypicalLEDStrip);
   FastLED.setBrightness(brightness);
-  FastLED.setMaxPowerInVoltsAndMilliamps(5, MILLI_AMPS);
+  FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MILLI_AMPS); 
   fill_solid(leds, NUM_LEDS, CRGB::Black);
   FastLED.show();
 
@@ -277,7 +316,10 @@ void setup() {
     String macID = String(mac[WL_MAC_ADDR_LENGTH - 2], HEX) +
                    String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
     macID.toUpperCase();
-    String AP_NameString = "Thousand Petal Lotus " + macID;
+    //    String AP_NameString = "Thousand Petal Lotus " + macID;
+    //    String AP_NameString = "Bed " + macID;
+    //    String AP_NameString = "First Floor " + macID;
+    String AP_NameString = String(MY_NAME) + " " + macID;
 
     char AP_NameChar[AP_NameString.length() + 1];
     memset(AP_NameChar, 0, AP_NameString.length() + 1);
@@ -306,6 +348,11 @@ void setup() {
     webServer.send(200, "text/json", json);
   });
 
+  webServer.on("/whoami", HTTP_GET, []() {
+    String json = "{\"name\":\"" + String(MY_NAME) + "\"}";
+    webServer.send(200, "text/json", json);
+  });
+
   webServer.on("/fieldValue", HTTP_GET, []() {
     String name = webServer.arg("name");
     String value = getFieldValue(name, fields, fieldCount);
@@ -317,6 +364,12 @@ void setup() {
     String value = webServer.arg("value");
     String newValue = setFieldValue(name, value, fields, fieldCount);
     webServer.send(200, "text/json", newValue);
+  });
+
+  webServer.on("/reset", HTTP_POST, []() {
+    Serial.print("RESETTING");
+    resetFunc();
+    Serial.print("RESETTING SHOULD NOT GET HERE");
   });
 
   webServer.on("/power", HTTP_POST, []() {
@@ -522,7 +575,7 @@ void loop() {
   FastLED.show();
 
   // insert a delay to keep the framerate modest
-//  FastLED.delay(1000 / FRAMES_PER_SECOND);
+  //  FastLED.delay(1000 / FRAMES_PER_SECOND);
 }
 
 //void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
@@ -778,6 +831,8 @@ void loadSettings()
     currentPatternIndex = 0;
   else if (currentPatternIndex >= patternCount)
     currentPatternIndex = patternCount - 1;
+
+  currentPatternIndex = 0;
 
   byte r = EEPROM.read(2);
   byte g = EEPROM.read(3);
@@ -1121,6 +1176,57 @@ void pride()
 
     nblend( leds[pixelnumber], newcolor, 64);
     nblend( leds[NUM_LEDS - 1 - pixelnumber], newcolor, 64);
+  }
+}
+
+uint32_t FloatToUint(float n)
+{
+   return (uint32_t)(*(uint32_t*)&n);
+}
+ 
+
+void prideScaled()
+{ 
+  static uint16_t sPseudotime = 0;
+  static uint16_t sLastMillis = 0;
+  static uint16_t sHue16 = 0;
+
+  uint8_t sat8 = beatsin88( 87, 220, 250);
+  uint8_t brightdepth = beatsin88( 341, 96, 224);
+  uint16_t brightnessthetainc16 = beatsin88( 203, (25 * 256), (40 * 256));
+  uint8_t msmultiplier = beatsin88(147, 23, 60);
+
+  uint16_t hue16 = sHue16;//gHue * 256;
+  uint16_t hueinc16 = beatsin88(113, 1, 3000);
+
+  uint16_t ms = millis();
+  uint16_t deltams = ms - sLastMillis ;
+  sLastMillis  = ms;
+  sPseudotime += deltams * msmultiplier;
+  sHue16 += deltams * beatsin88( 400, 5, 9);
+  uint16_t brightnesstheta16 = sPseudotime;
+
+  for ( uint16_t i = 0 ; i < HALF_SYSTEM_MAX_LEDS; i++) {
+    hue16 += hueinc16;
+    uint8_t hue8 = hue16 / 256;
+
+    brightnesstheta16  += brightnessthetainc16;
+    uint16_t b16 = sin16( brightnesstheta16  ) + 32768;
+
+    uint16_t bri16 = (uint32_t)((uint32_t)b16 * (uint32_t)b16) / 65536;
+    uint8_t bri8 = (uint32_t)(((uint32_t)bri16) * brightdepth) / 65536;
+    bri8 += (255 - brightdepth);
+
+    CRGB newcolor = CHSV( hue8, sat8, bri8);
+
+    uint16_t pixelnumber = i;
+    pixelnumber = (HALF_SYSTEM_MAX_LEDS - 1) - pixelnumber;
+
+    //TODO: THERE IS SOMETHING WRONG WITH THIS LINE :(
+    uint16_t scaledPixelNumber = FloatToUint(pixelnumber / HALF_SYSTEM_MAX_LEDS * NUM_LEDS + .5);
+
+    nblend( leds[scaledPixelNumber], newcolor, 64);
+    nblend( leds[NUM_LEDS - 1 - scaledPixelNumber], newcolor, 64);
   }
 }
 
